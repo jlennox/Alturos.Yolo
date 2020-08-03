@@ -1,10 +1,10 @@
-﻿using Alturos.Yolo.Model;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using Alturos.Yolo.Model;
 
 namespace Alturos.Yolo
 {
@@ -205,7 +205,7 @@ namespace Alturos.Yolo
         /// <returns></returns>
         /// <exception cref="NotImplementedException">Thrown when the yolo_cpp dll is wrong compiled</exception>
         /// <exception cref="Exception">Thrown when the byte array is not a valid image</exception>
-        public unsafe IEnumerable<YoloItem> Detect(byte[] imageData)
+        public unsafe IEnumerable<YoloItem> Detect(Span<byte> imageData)
         {
             if (!this._imageAnalyzer.IsValidImageFormat(imageData))
             {
@@ -251,34 +251,9 @@ namespace Alturos.Yolo
         /// <param name="size"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException">Thrown when the yolo_cpp dll is wrong compiled</exception>
-        public IEnumerable<YoloItem> Detect(IntPtr imagePtr, int size)
+        public unsafe IEnumerable<YoloItem> Detect(IntPtr imagePtr, int size)
         {
-            var container = new BboxContainer();
-
-            var count = 0;
-            try
-            {
-                switch (this.DetectionSystem)
-                {
-                    case DetectionSystem.CPU:
-                        count = DetectImageCpu(imagePtr, size, ref container);
-                        break;
-                    case DetectionSystem.GPU:
-                        count = DetectImageGpu(imagePtr, size, ref container);
-                        break;
-                }
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-
-            if (count == -1)
-            {
-                throw new NotImplementedException("C++ dll compiled incorrectly");
-            }
-
-            return this.Convert(container);
+            return Detect(new Span<byte>((void*)imagePtr, size));
         }
 
         public string GetGraphicDeviceName(GpuConfig gpuConfig)

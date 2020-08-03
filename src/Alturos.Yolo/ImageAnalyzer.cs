@@ -1,25 +1,19 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace Alturos.Yolo
 {
     public class ImageAnalyzer
     {
-        private Dictionary<string, byte[]> _imageFormats = new Dictionary<string, byte[]>();
-
-        public ImageAnalyzer()
+        private static readonly Dictionary<string, byte[]> _imageFormats = new Dictionary<string, byte[]>
         {
-            var bmp = Encoding.ASCII.GetBytes("BM");  //BMP
-            var png = new byte[] { 137, 80, 78, 71 }; //PNG
-            var jpeg = new byte[] { 255, 216, 255 };  //JPEG
+            { "bmp", Encoding.ASCII.GetBytes("BM") },
+            { "png", new byte[] { 137, 80, 78, 71 } },
+            { "jpeg", new byte[] { 255, 216, 255 } }
+        };
 
-            this._imageFormats.Add("bmp", bmp);
-            this._imageFormats.Add("png", png);
-            this._imageFormats.Add("jpeg", jpeg);
-        }
-
-        public bool IsValidImageFormat(byte[] imageData)
+        public bool IsValidImageFormat(Span<byte> imageData)
         {
             if (imageData == null)
             {
@@ -31,9 +25,9 @@ namespace Alturos.Yolo
                 return false;
             }
 
-            foreach (var imageFormat in this._imageFormats)
+            foreach (var imageFormat in ImageAnalyzer._imageFormats)
             {
-                if (imageData.Take(imageFormat.Value.Length).SequenceEqual(imageFormat.Value))
+                if (imageData.StartsWith(imageFormat.Value))
                 {
                     return true;
                 }
